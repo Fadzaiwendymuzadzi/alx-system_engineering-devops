@@ -1,39 +1,28 @@
 #!/usr/bin/python3
-"""Request employee ID from API
+"""
+Uses https://jsonplaceholder.typicode.com REST API and a given employee ID to
+record all tasks that are owned by this employee in a JSON file
 """
 
-from json import dump
+import json
 import requests
 from sys import argv
 
 if __name__ == "__main__":
-
-    def make_request(resource, param=None):
-        """Retrieve user from API
-        """
-        url = 'https://jsonplaceholder.typicode.com/'
-        url += resource
-        if param:
-            url += ('?' + param[0] + '=' + param[1])
-
-        # make request
-        r = requests.get(url)
-
-        # extract json response
-        r = r.json()
-        return r
-
-    user = make_request('users', ('id', argv[1]))[0]
-    tasks = make_request('todos', ('userId', argv[1]))
-
-    # format before exporting
-    user_id = user['id']
-    export = {user_id: []}
-    for task in tasks:
-        export[user_id].append({'task': task['title'],
-                                'completed': task['completed'],
-                                'username': user['username']})
-
-    filename = argv[1] + '.json'
-    with open(filename, mode='w') as f:
-        dump(export, f)
+    userID = argv[1]
+    user = requests.get("https://jsonplaceholder.typicode.com/users/{}"
+                        .format(userID)).json()
+    todos = requests.get("https://jsonplaceholder.typicode.com/todos?userId={}"
+                         .format(userID)).json()
+    username = user.get('username')
+    tasks = []
+    for task in todos:
+        task_dict = {}
+        task_dict["task"] = task.get('title')
+        task_dict["completed"] = task.get('completed')
+        task_dict["username"] = username
+        tasks.append(task_dict)
+    jsonobj = {}
+    jsonobj[userID] = tasks
+    with open("{}.json".format(userID), 'w') as jsonfile:
+        json.dump(jsonobj, jsonfile)

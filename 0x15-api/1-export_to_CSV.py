@@ -1,39 +1,22 @@
 #!/usr/bin/python3
-"""Request employee ID from API
 """
-
+Using https://jsonplaceholder.typicode.com REST API with a given imployee ID
+Records all tasks that are owned by this employee in CSV file.
+"""
 import csv
 import requests
 from sys import argv
 
 if __name__ == "__main__":
-
-    def make_request(resource, param=None):
-        """Retrieve user from API
-        """
-        url = 'https://jsonplaceholder.typicode.com/'
-        url += resource
-        if param:
-            url += ('?' + param[0] + '=' + param[1])
-
-        # make request
-        r = requests.get(url)
-
-        # extract json response
-        r = r.json()
-        return r
-
-    user = make_request('users', ('id', argv[1]))[0]
-    tasks = make_request('todos', ('userId', argv[1]))
-
-    csv_filename = argv[1] + '.csv'
-    with open(csv_filename, mode='w') as f:
-        writer = csv.writer(f,
-                            delimiter=',',
-                            quotechar='"',
-                            quoting=csv.QUOTE_ALL)
-        for task in tasks:
-            writer.writerow([user['id'],
-                            user['username'],
-                            task['completed'],
-                            task['title']])
+    userID = argv[1]
+    user = requests.get("https://jsonplaceholder.typicode.com/users/{}".
+                        format(userID)).json()
+    todos = requests.get("https://jsonplaceholder.typicode.com/todos?userId={}"
+                         .format(userID)).json()
+    with open("{}.csv".format(userID), 'w', newline='') as csvfile:
+        taskwriter = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
+        for task in todos:
+            taskwriter.writerow([int(userID),
+                                 user.get('username'),
+                                 task.get('completed'),
+                                 task.get('title')])
